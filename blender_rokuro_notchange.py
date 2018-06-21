@@ -13,14 +13,6 @@ bl_info = {
 import bpy
 import math
 import copy
-import sys
-import time
-import decimal
-import string
-sys.path.append("/Library/Python/2.7/site-packages")
-import serial
-
-ser = 0
 
 blender_rokuro_dict = {
     "en_US" : {
@@ -70,18 +62,6 @@ def rokuro_add_euler(euler, r):
 
 
 def rokuro_proc(scene):
-    global ser
-    x = ser.readline()
-    x_change = x.decode('utf-8')
-    x_change = x_change.replace('\n','')
-    x_change = x_change.replace('\r','')
-    # 上はarduinoから出てきた出力にある改行文字を消している
-    # print(x_change)
-    value = 0
-    value = value + (float(x_change))
-    # 文字列扱いの数値を,扱えるように変換
-    value = round(value, 3)
-
     props = bpy.context.window_manager.rokuro
 
     r = props.rotate_step * 2.0 * math.pi / (scene.frame_end - scene.frame_start)
@@ -89,17 +69,13 @@ def rokuro_proc(scene):
         r *= -1.0
 
     if props.rotate_axis_x:
-        value = bpy.context.object.rotation_euler[0]
-        bpy.context.object.rotation_euler[0] = value
+        bpy.context.object.rotation_euler[0] = rokuro_add_euler(bpy.context.object.rotation_euler[0], r)
 
     if props.rotate_axis_y:
-        value = bpy.context.object.rotation_euler[1]
-        bpy.context.object.rotation_euler[1] = value
+        bpy.context.object.rotation_euler[1] = rokuro_add_euler(bpy.context.object.rotation_euler[1], r)
 
     if props.rotate_axis_z:
-        value = bpy.context.object.rotation_euler[2]
-        bpy.context.object.rotation_euler[2] = value
-
+        bpy.context.object.rotation_euler[2] = rokuro_add_euler(bpy.context.object.rotation_euler[2], r)
 
 
 def rokuro_at_load(scene):
@@ -116,11 +92,7 @@ class BlenderRokuroRotate(bpy.types.Operator):
             bpy.app.handlers.frame_change_post.remove(rokuro_proc)
             bpy.app.handlers.load_pre.remove(rokuro_at_load)
             bpy.context.object.rotation_euler = BlenderRokuroProps.rotate_previous_euler
-            global ser
-            ser.close()
         else:
-            global ser
-            ser = serial.Serial("/dev/tty.usbmodem14111", 9600)
             BlenderRokuroProps.rotate_previous_euler = copy.deepcopy(bpy.context.object.rotation_euler)
             bpy.app.handlers.frame_change_post.append(rokuro_proc)
             bpy.app.handlers.load_pre.append(rokuro_at_load)

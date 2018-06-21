@@ -21,6 +21,7 @@ sys.path.append("/Library/Python/2.7/site-packages")
 import serial
 
 ser = 0
+value = 0
 
 blender_rokuro_dict = {
     "en_US" : {
@@ -53,6 +54,7 @@ class BlenderRokuroProps(bpy.types.PropertyGroup):
     rotate_started = False
 
 def rokuro_add_euler(euler, r):
+
     props = bpy.context.window_manager.rokuro
 
     if props.rotate_direction:
@@ -84,22 +86,23 @@ def rokuro_proc(scene):
 
     props = bpy.context.window_manager.rokuro
 
-    r = props.rotate_step * 2.0 * math.pi / (scene.frame_end - scene.frame_start)
+    r = value * 2.0 * math.pi / (scene.frame_end - scene.frame_start)
+    print(bpy.context.object.rotation_euler[0] * 57.3)
+    print(bpy.context.object.rotation_euler[1] * 57.3)
+    print(bpy.context.object.rotation_euler[2] * 57.3)
+
+
     if props.rotate_direction:
         r *= -1.0
 
     if props.rotate_axis_x:
-        value = bpy.context.object.rotation_euler[0]
-        bpy.context.object.rotation_euler[0] = value
+        bpy.context.object.rotation_euler[0] = rokuro_add_euler(bpy.context.object.rotation_euler[0], r * 10)
 
     if props.rotate_axis_y:
-        value = bpy.context.object.rotation_euler[1]
-        bpy.context.object.rotation_euler[1] = value
+        bpy.context.object.rotation_euler[1] = rokuro_add_euler(bpy.context.object.rotation_euler[1], r * 10)
 
     if props.rotate_axis_z:
-        value = bpy.context.object.rotation_euler[2]
-        bpy.context.object.rotation_euler[2] = value
-
+        bpy.context.object.rotation_euler[2] = rokuro_add_euler(bpy.context.object.rotation_euler[2], r * 10)
 
 
 def rokuro_at_load(scene):
@@ -127,7 +130,6 @@ class BlenderRokuroRotate(bpy.types.Operator):
             bpy.ops.screen.animation_play()
 
         BlenderRokuroProps.rotate_started = not BlenderRokuroProps.rotate_started
-
         return {'FINISHED'}
 
 
